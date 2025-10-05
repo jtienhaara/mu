@@ -72,4 +72,4 @@ debian-container-run: build-debian-container
 	    --rm \
 	    --volume `pwd`/..:/mu:ro \
 	    mu-debian:latest \
-	    /mu/build/mu $(MU_SOURCE_FILES)
+	    /mu/build/mu --tracing $(MU_SOURCE_FILES)
