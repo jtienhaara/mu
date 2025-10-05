@@ -114,6 +114,8 @@ RUN mkdir -p /mu \
 #         C debugger.
 #     libpcre2-dev
 #         UTF-8 character regular expressions.
+#     libtree-sitter-dev
+#         For grammar parsing.
 #     libutf8lex
 #         Lexing UTF-8 characters (https://github.com/jtienhaara/utf8lex).
 #     libutf8proc-dev
@@ -138,6 +140,7 @@ RUN apt-get update --yes \
        gcc \
        gdb \
        libpcre2-dev \
+       libtree-sitter-dev \
        libutf8proc-dev \
        libutf8proc2 \
        locales \
@@ -153,13 +156,14 @@ RUN apt-get update --yes \
     && apt-get clean
 
 ENV LC_CTYPE=C.utf8
-ENV UTF8LEX_VERSION=0.0.1
+ENV UTF8LEX_VERSION=0.0.6
 ENV UTF8LEX_MAJOR=0
 
 #
 # Install utf8lex.
 #
-RUN wget https://github.com/jtienhaara/utf8lex/releases/download/v${UTF8LEX_VERSION}/libutf8lex.a.${UTF8LEX_VERSION}.$DEBIAN_ARCHITECTURE \
+RUN echo "Downloading utf8lex" \
+    && wget https://github.com/jtienhaara/utf8lex/releases/download/v${UTF8LEX_VERSION}/libutf8lex.a.${UTF8LEX_VERSION}.$DEBIAN_ARCHITECTURE \
     --output-document /usr/lib/libutf8lex.a.${UTF8LEX_VERSION} \
     && wget https://github.com/jtienhaara/utf8lex/releases/download/v${UTF8LEX_VERSION}/libutf8lex.so.${UTF8LEX_VERSION}.$DEBIAN_ARCHITECTURE \
     --output-document /usr/lib/libutf8lex.so.${UTF8LEX_VERSION} \

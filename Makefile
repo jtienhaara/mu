@@ -64,9 +64,9 @@ unit_tests:
 
 .PHONY: integration_tests
 integration_tests:
-# !!! 	cd tests/integration \
-# !!! 	    && make build \
-# !!! 	    && make run
+	cd tests/integration \
+	    && make build \
+	    && make run
 
 .PHONY: examples
 examples:

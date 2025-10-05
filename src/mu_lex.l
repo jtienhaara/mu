@@ -27,25 +27,17 @@ enum _ENUM_yylex_token
   TOKEN_NONE = -1,
 
   TOKEN_WHITESPACE,
-  TOKEN_LINE_BREAK,
+  TOKEN_NEWLINE,
 
   TOKEN_BACKSLASH,
 
-  TOKEN_RANGE,
-  TOKEN_INT_RANGE,
-  TOKEN_FLOAT_RANGE,
+  TOKEN_PATTERN_INT_RANGE,
+  TOKEN_PATTERN_FLOAT_RANGE,
+  TOKEN_PATTERN_REGEX,
 
-  TOKEN_STRING_DOUBLE_CONTENT,
-  TOKEN_STRING_DOUBLE_FULL,
-  TOKEN_STRING_DOUBLE_EMPTY,
-  TOKEN_STRING_DOUBLE_QUOTE,
-
-  TOKEN_STRING_SINGLE_CONTENT,
-  TOKEN_STRING_SINGLE_FULL,
-  TOKEN_STRING_SINGLE_EMPTY,
+  TOKEN_STRING_MULTI_LINE,
   TOKEN_STRING_SINGLE_QUOTE,
-
-  TOKEN_STRING,
+  TOKEN_STRING_DOUBLE_QUOTE,
 
   TOKEN_BRACE_CLOSE,
   TOKEN_BRACE_OPEN,
@@ -53,15 +45,11 @@ enum _ENUM_yylex_token
   TOKEN_BRACKET_OPEN,
   TOKEN_COLON,
   TOKEN_COMMA,
-  TOKEN_COMMENT_MULTI_LINE_OPEN,
-  TOKEN_COMMENT_MULTI_LINE_CLOSE,
+  TOKEN_COMMENT_MULTI_LINE,
   TOKEN_COMMENT_SINGLE_LINE,
   TOKEN_DOT_DOT_DOT,
   TOKEN_DOT_DOT,
   TOKEN_DOT,
-  TOKEN_QUOTE_TRIPLE,
-  TOKEN_QUOTE_DOUBLE,
-  TOKEN_QUOTE_SINGLE,
   TOKEN_OP_ASSIGN_AND_AND,
   TOKEN_OP_AND_AND,
   TOKEN_OP_ASSIGN_AND,
@@ -112,114 +100,94 @@ enum _ENUM_yylex_token
 };
 %}
 
-%{
-// =====================================================================
-// Whitespace
-// ---------------------------------------------------------------------
-%}
-WHITESPACE                      HSPACE
-LINE_BREAK                      VSPACE | PARAGRAPH | NEWLINE
+COMMENT_MULTI_LINE      COMMENT_MULTI_LINE_OPEN COMMENT_MULTI_LINE_BODY COMMENT_MULTI_LINE_CLOSE
+COMMENT_MULTI_LINE_BODY ([^*\\]+|[*][^/\\]|[*]\\/|[^*\\]/|\\.)*
 
-%{
-// =====================================================================
-// Single character tokens
-// ---------------------------------------------------------------------
-%}
-BACKSLASH                       "\\"
+COMMENT_SINGLE_LINE     COMMENT_SINGLE_LINE_OPEN TO_EOL
 
-%{
-// =====================================================================
-// Ranges: /1..5/, /63.9..92.6/, etc.
-// ---------------------------------------------------------------------
-%}
-RANGE                           INT_RANGE | FLOAT_RANGE
-INT_RANGE                       INT DOT_DOT INT
-FLOAT_RANGE                     FLOAT DOT_DOT FLOAT
+PATTERN_INT_RANGE       SLASH INT DOT_DOT INT SLASH
+PATTERN_FLOAT_RANGE     SLASH FLOAT DOT_DOT FLOAT SLASH
+PATTERN_REGEX           PATTERN_REGEX_OPEN PATTERN_REGEX_BODY PATTERN_REGEX_CLOSE
+PATTERN_REGEX_BODY      ([^$\v]+|[$][^/\v]|[$]\\/|\\[^\v])*
 
-%{
-// =====================================================================
-// Strings
-// ---------------------------------------------------------------------
-%}
-STRING_DOUBLE_CONTENT           ((\\.)*[^"\\]*)+
-STRING_DOUBLE_FULL              QUOTE_DOUBLE STRING_DOUBLE_CONTENT QUOTE_DOUBLE
-STRING_DOUBLE_EMPTY             QUOTE_DOUBLE QUOTE_DOUBLE
-STRING_DOUBLE_QUOTE             STRING_DOUBLE_FULL | STRING_DOUBLE_EMPTY
+STRING_MULTI_LINE       DOUBLE_QUOTES_3 STRING_MULTI_LINE_BODY DOUBLE_QUOTES_3
+STRING_MULTI_LINE_BODY  ([^"\\]+|[^"\\]"["]?[^"\\]|[^"\\]"["]?\\.|\\.)*
 
-STRING_SINGLE_CONTENT           ((\\.)*[^'\\]*)+
-STRING_SINGLE_FULL              QUOTE_SINGLE STRING_SINGLE_CONTENT QUOTE_SINGLE
-STRING_SINGLE_EMPTY             QUOTE_SINGLE QUOTE_SINGLE
-STRING_SINGLE_QUOTE             STRING_SINGLE_FULL | STRING_SINGLE_EMPTY
+STRING_DOUBLE_QUOTE     DOUBLE_QUOTE STRING_DOUBLE_QUOTE_BODY DOUBLE_QUOTE
+STRING_DOUBLE_QUOTE_BODY ([^"\v]+|\\[^\v])*
 
-STRING                          STRING_DOUBLE_QUOTE | STRING_SINGLE_QUOTE
+STRING_SINGLE_QUOTE     SINGLE_QUOTE STRING_SINGLE_QUOTE_BODY SINGLE_QUOTE
+STRING_SINGLE_QUOTE_BODY ([^'\v]+|\\[^\v])*
 
-%{
-// =====================================================================
-// Fairly simple tokens.
-// ---------------------------------------------------------------------
-%}
-BRACE_CLOSE                     "}"
-BRACE_OPEN                      "{"
-BRACKET_CLOSE                   "]"
-BRACKET_OPEN                    "["
-COLON                           ":"
-COMMA                           ","
-COMMENT_MULTI_LINE_OPEN         "/*"
-COMMENT_MULTI_LINE_CLOSE        "*/"
-COMMENT_SINGLE_LINE             //.*
-DOT_DOT_DOT                     "..."
-DOT_DOT                         ".."
-DOT                             "."
-QUOTE_TRIPLE                    "\"\"\""
-QUOTE_DOUBLE                    "\""
-QUOTE_SINGLE                    "'"
-OP_ASSIGN_AND_AND               "&&="
-OP_AND_AND                      "&&"
-OP_ASSIGN_AND                   "&="
-OP_AND                          "&"
-OP_ASSIGN                       "="
-OP_ASSIGN_DECREMENT             "--"
-OP_ASSIGN_DIVIDE                "/="
-OP_ASSIGN_INCREMENT             "++"
-OP_ASSIGN_MINUS                 "-="
-OP_ASSIGN_MODULO                "%="
-OP_ASSIGN_OR                    "|="
-OP_ASSIGN_OR_OR                 "||="
-OP_ASSIGN_PLUS                  "+="
-OP_ASSIGN_POWER                 "**="
-OP_ASSIGN_TIMES                 "*="
-OP_ASSIGN_XOR                   "^="
-OP_ASSIGN_XOR_XOR               "^^="
-OP_AT                           "@"
-OP_DIVIDED_BY                   "/"
-OP_DOLLAR                       "$"
-OP_EQUAL                        "=="
-OP_GREATER_THAN_EQUAL           ">="
-OP_GREATER_THAN                 ">"
-OP_HASH                         "#"
-OP_LESS_THAN_EQUAL              "<="
-OP_LESS_THAN                    "<"
-OP_MINUS                        "-"
-OP_MODULO                       "%"
-OP_NOT                          "!"
-OP_NOT_EQUAL                    "!="
-OP_OR                           "|"
-OP_OR_OR                        "||"
-OP_PLUS                         "+"
-OP_POWER                        "**"
-OP_QUERY                        "?"
-OP_TILDE                        "~"
-OP_TILDE_EQUAL                  "~="
-OP_TIMES                        "*"
-OP_XOR                          "^"
-OP_XOR_XOR                      "^^"
-PARENTHESIS_CLOSE               ")"
-PARENTHESIS_OPEN                "("
-SEMI_COLON                      ";"
+DOUBLE_QUOTES_3 "\"\"\""
+DOUBLE_QUOTE "\""
+SINGLE_QUOTE "'"
+SLASH                   "/"
+TO_EOL                  [^\v]*
 
-FLOAT                           [\+\-]?[1-9][0-9]*(\.[1-9][0-9]*)?(e[\+\-]?[1-9][0-9]*)?
-INT                             [\+\-]?[1-9][0-9]*(e[\+]?[1-9][0-9]*)?
-ID                              [_\p{L}][_\p{L}\p{N}]*
+BRACE_CLOSE             "}"
+BRACE_OPEN              "{"
+BRACKET_CLOSE           "]"
+BRACKET_OPEN            "["
+COLON                   ":"
+COMMA                   ","
+COMMENT_MULTI_LINE_OPEN "/*"
+COMMENT_MULTI_LINE_CLOSE "*/"
+COMMENT_SINGLE_LINE_OPEN "//"
+DOT_DOT_DOT             "..."
+DOT_DOT                 ".."
+DOT                     "."
+FLOAT                   [-+]?[0-9]*\.[0-9]+(e[-+]?([0-9]*\.)?[0-9]+)?
+ID                      [_\p{L}][_\p{L}\p{N}]*
+INT                     [-+]?[0-9]+(e[+]?[0-9]+)?
+NEWLINE                 [\r]?\n
+OP_AND                  "&"
+OP_AND_AND              "&&"
+OP_ASSIGN               "="
+OP_ASSIGN_AND           "&="
+OP_ASSIGN_AND_AND       "&&="
+OP_ASSIGN_DECREMENT     "--"
+OP_ASSIGN_DIVIDE        "/="
+OP_ASSIGN_INCREMENT     "++"
+OP_ASSIGN_MINUS         "-="
+OP_ASSIGN_MODULO        "%="
+OP_ASSIGN_OR            "|="
+OP_ASSIGN_OR_OR         "||="
+OP_ASSIGN_PLUS          "+="
+OP_ASSIGN_POWER         "**="
+OP_ASSIGN_TIMES         "*="
+OP_ASSIGN_XOR           "^="
+OP_ASSIGN_XOR_XOR       "^^="
+OP_AT                   "@"
+OP_DIVIDED_BY           SLASH
+OP_DOLLAR               "$"
+OP_EQUAL                "=="
+OP_GREATER_THAN         ">"
+OP_GREATER_THAN_EQUAL   ">="
+OP_HASH                 "#"
+OP_LESS_THAN            "<"
+OP_LESS_THAN_EQUAL      "<="
+OP_MINUS                "-"
+OP_MODULO               "%"
+OP_NOT                  "!"
+OP_NOT_EQUAL            "!="
+OP_OR                   "|"
+OP_OR_OR                "||"
+OP_PLUS                 "+"
+OP_POWER                "**"
+OP_QUERY                "?"
+OP_TILDE                "~"
+OP_TILDE_EQUAL          "~="
+OP_TIMES                "*"
+OP_XOR                  "^"
+OP_XOR_XOR              "^^"
+PARENTHESIS_CLOSE       ")"
+PARENTHESIS_OPEN        "("
+PATTERN_REGEX_OPEN      "/^"
+PATTERN_REGEX_CLOSE     "$/"
+SEMI_COLON              ";"
+
+WHITESPACE              [\h]+
 
 %%
 
@@ -229,78 +197,74 @@ ID                              [_\p{L}][_\p{L}\p{N}]*
 // ---------------------------------------------------------------------
 %}
 
-WHITESPACE                      { return TOKEN_WHITESPACE; }
-LINE_BREAK                      { return TOKEN_LINE_BREAK; }
+WHITESPACE { return TOKEN_WHITESPACE; }
 
-BACKSLASH                       { return TOKEN_BACKSLASH; }
+COMMENT_MULTI_LINE { char comment_body[256]; utf8lex_sub_token_t *sub_token = NULL; utf8lex_error_t error = utf8lex_sub_token_find(token->sub_tokens, "COMMENT_MULTI_LINE_BODY", 0, &sub_token); if (error != UTF8LEX_OK) { comment_body[0] = '\0'; } else { utf8lex_sub_token_copy_string(sub_token, comment_body, 256); } return TOKEN_COMMENT_MULTI_LINE; }
+COMMENT_SINGLE_LINE { return TOKEN_COMMENT_SINGLE_LINE; }
 
-INT_RANGE                       { return TOKEN_INT_RANGE; }
-FLOAT_RANGE                     { return TOKEN_FLOAT_RANGE; }
+PATTERN_INT_RANGE { return TOKEN_PATTERN_INT_RANGE; }
+PATTERN_FLOAT_RANGE { return TOKEN_PATTERN_FLOAT_RANGE; }
+PATTERN_REGEX { return TOKEN_PATTERN_REGEX; }
 
-STRING_DOUBLE_QUOTE             { return TOKEN_STRING_DOUBLE_QUOTE; }
-STRING_SINGLE_QUOTE             { return TOKEN_STRING_SINGLE_QUOTE; }
+STRING_MULTI_LINE { return TOKEN_STRING_MULTI_LINE; }
+STRING_DOUBLE_QUOTE { return TOKEN_STRING_DOUBLE_QUOTE; }
+STRING_SINGLE_QUOTE { return TOKEN_STRING_SINGLE_QUOTE; }
 
-BRACE_CLOSE                     { return TOKEN_BRACE_CLOSE; }
-BRACE_OPEN                      { return TOKEN_BRACE_OPEN; }
-BRACKET_CLOSE                   { return TOKEN_BRACKET_CLOSE; }
-BRACKET_OPEN                    { return TOKEN_BRACKET_OPEN; }
-COLON                           { return TOKEN_COLON; }
-COMMA                           { return TOKEN_COMMA; }
-COMMENT_MULTI_LINE_OPEN         { return TOKEN_COMMENT_MULTI_LINE_OPEN; }
-COMMENT_MULTI_LINE_CLOSE        { return TOKEN_COMMENT_MULTI_LINE_CLOSE; }
-COMMENT_SINGLE_LINE             { return TOKEN_COMMENT_SINGLE_LINE; }
-DOT_DOT_DOT                     { return TOKEN_DOT_DOT_DOT; }
-DOT_DOT                         { return TOKEN_DOT_DOT; }
-DOT                             { return TOKEN_DOT; }
-QUOTE_TRIPLE                    { return TOKEN_QUOTE_TRIPLE; }
-QUOTE_DOUBLE                    { return TOKEN_QUOTE_DOUBLE; }
-QUOTE_SINGLE                    { return TOKEN_QUOTE_SINGLE; }
-OP_ASSIGN_AND_AND               { return TOKEN_OP_ASSIGN_AND_AND; }
-OP_AND_AND                      { return TOKEN_OP_AND_AND; }
-OP_ASSIGN_AND                   { return TOKEN_OP_ASSIGN_AND; }
-OP_AND                          { return TOKEN_OP_AND; }
-OP_ASSIGN                       { return TOKEN_OP_ASSIGN; }
-OP_ASSIGN_DECREMENT             { return TOKEN_OP_ASSIGN_DECREMENT; }
-OP_ASSIGN_DIVIDE                { return TOKEN_OP_ASSIGN_DIVIDE; }
-OP_ASSIGN_INCREMENT             { return TOKEN_OP_ASSIGN_INCREMENT; }
-OP_ASSIGN_MINUS                 { return TOKEN_OP_ASSIGN_MINUS; }
-OP_ASSIGN_MODULO                { return TOKEN_OP_ASSIGN_MODULO; }
-OP_ASSIGN_OR                    { return TOKEN_OP_ASSIGN_OR; }
-OP_ASSIGN_OR_OR                 { return TOKEN_OP_ASSIGN_OR_OR; }
-OP_ASSIGN_PLUS                  { return TOKEN_OP_ASSIGN_PLUS; }
-OP_ASSIGN_POWER                 { return TOKEN_OP_ASSIGN_POWER; }
-OP_ASSIGN_TIMES                 { return TOKEN_OP_ASSIGN_TIMES; }
-OP_ASSIGN_XOR                   { return TOKEN_OP_ASSIGN_XOR; }
-OP_ASSIGN_XOR_XOR               { return TOKEN_OP_ASSIGN_XOR_XOR; }
-OP_AT                           { return TOKEN_OP_AT; }
-OP_DIVIDED_BY                   { return TOKEN_OP_DIVIDED_BY; }
-OP_DOLLAR                       { return TOKEN_OP_DOLLAR; }
-OP_EQUAL                        { return TOKEN_OP_EQUAL; }
-OP_GREATER_THAN_EQUAL           { return TOKEN_OP_GREATER_THAN_EQUAL; }
-OP_GREATER_THAN                 { return TOKEN_OP_GREATER_THAN; }
-OP_HASH                         { return TOKEN_OP_HASH; }
-OP_LESS_THAN_EQUAL              { return TOKEN_OP_LESS_THAN_EQUAL; }
-OP_LESS_THAN                    { return TOKEN_OP_LESS_THAN; }
-OP_MINUS                        { return TOKEN_OP_MINUS; }
-OP_MODULO                       { return TOKEN_OP_MODULO; }
-OP_NOT                          { return TOKEN_OP_NOT; }
-OP_NOT_EQUAL                    { return TOKEN_OP_NOT_EQUAL; }
-OP_OR                           { return TOKEN_OP_OR; }
-OP_OR_OR                        { return TOKEN_OP_OR_OR; }
-OP_PLUS                         { return TOKEN_OP_PLUS; }
-OP_POWER                        { return TOKEN_OP_POWER; }
-OP_QUERY                        { return TOKEN_OP_QUERY; }
-OP_TILDE                        { return TOKEN_OP_TILDE; }
-OP_TILDE_EQUAL                  { return TOKEN_OP_TILDE_EQUAL; }
-OP_TIMES                        { return TOKEN_OP_TIMES; }
-OP_XOR                          { return TOKEN_OP_XOR; }
-OP_XOR_XOR                      { return TOKEN_OP_XOR_XOR; }
-PARENTHESIS_CLOSE               { return TOKEN_PARENTHESIS_CLOSE; }
-PARENTHESIS_OPEN                { return TOKEN_PARENTHESIS_OPEN; }
-SEMI_COLON                      { return TOKEN_SEMI_COLON; }
-
-FLOAT                           { return TOKEN_FLOAT; }
-INT                             { return TOKEN_INT; }
-ID                              { return TOKEN_ID; }
+BRACE_CLOSE { return TOKEN_BRACE_CLOSE; }
+BRACE_OPEN { return TOKEN_BRACE_OPEN; }
+BRACKET_CLOSE { return TOKEN_BRACKET_CLOSE; }
+BRACKET_OPEN { return TOKEN_BRACKET_OPEN; }
+COLON { return TOKEN_COLON; }
+COMMA { return TOKEN_COMMA; }
+DOT_DOT_DOT { return TOKEN_DOT_DOT_DOT; }
+DOT_DOT { return TOKEN_DOT_DOT; }
+DOT { return TOKEN_DOT; }
+FLOAT { return TOKEN_FLOAT; }
+ID { return TOKEN_ID; }
+INT { return TOKEN_INT; }
+NEWLINE { return TOKEN_NEWLINE; }
+OP_AND { return TOKEN_OP_AND; }
+OP_AND_AND { return TOKEN_OP_AND_AND; }
+OP_ASSIGN { return TOKEN_OP_ASSIGN; }
+OP_ASSIGN_AND { return TOKEN_OP_ASSIGN_AND; }
+OP_ASSIGN_AND_AND { return TOKEN_OP_ASSIGN_AND_AND; }
+OP_ASSIGN_DECREMENT { return TOKEN_OP_ASSIGN_DECREMENT; }
+OP_ASSIGN_DIVIDE { return TOKEN_OP_ASSIGN_DIVIDE; }
+OP_ASSIGN_INCREMENT { return TOKEN_OP_ASSIGN_INCREMENT; }
+OP_ASSIGN_MINUS { return TOKEN_OP_ASSIGN_MINUS; }
+OP_ASSIGN_MODULO { return TOKEN_OP_ASSIGN_MODULO; }
+OP_ASSIGN_OR { return TOKEN_OP_ASSIGN_OR; }
+OP_ASSIGN_OR_OR { return TOKEN_OP_ASSIGN_OR_OR; }
+OP_ASSIGN_PLUS { return TOKEN_OP_ASSIGN_PLUS; }
+OP_ASSIGN_POWER { return TOKEN_OP_ASSIGN_POWER; }
+OP_ASSIGN_TIMES { return TOKEN_OP_ASSIGN_TIMES; }
+OP_ASSIGN_XOR { return TOKEN_OP_ASSIGN_XOR; }
+OP_ASSIGN_XOR_XOR { return TOKEN_OP_ASSIGN_XOR_XOR; }
+OP_AT { return TOKEN_OP_AT; }
+OP_DIVIDED_BY { return TOKEN_OP_DIVIDED_BY; }
+OP_DOLLAR { return TOKEN_OP_DOLLAR; }
+OP_EQUAL { return TOKEN_OP_EQUAL; }
+OP_GREATER_THAN { return TOKEN_OP_GREATER_THAN; }
+OP_GREATER_THAN_EQUAL { return TOKEN_OP_GREATER_THAN_EQUAL; }
+OP_HASH { return TOKEN_OP_HASH; }
+OP_LESS_THAN { return TOKEN_OP_LESS_THAN; }
+OP_LESS_THAN_EQUAL { return TOKEN_OP_LESS_THAN_EQUAL; }
+OP_MINUS { return TOKEN_OP_MINUS; }
+OP_MODULO { return TOKEN_OP_MODULO; }
+OP_NOT { return TOKEN_OP_NOT; }
+OP_NOT_EQUAL { return TOKEN_OP_NOT_EQUAL; }
+OP_OR { return TOKEN_OP_OR; }
+OP_OR_OR { return TOKEN_OP_OR_OR; }
+OP_PLUS { return TOKEN_OP_PLUS; }
+OP_POWER { return TOKEN_OP_POWER; }
+OP_QUERY { return TOKEN_OP_QUERY; }
+OP_TILDE { return TOKEN_OP_TILDE; }
+OP_TILDE_EQUAL { return TOKEN_OP_TILDE_EQUAL; }
+OP_TIMES { return TOKEN_OP_TIMES; }
+OP_XOR { return TOKEN_OP_XOR; }
+OP_XOR_XOR { return TOKEN_OP_XOR_XOR; }
+PARENTHESIS_CLOSE { return TOKEN_PARENTHESIS_CLOSE; }
+PARENTHESIS_OPEN { return TOKEN_PARENTHESIS_OPEN; }
+SEMI_COLON { return TOKEN_SEMI_COLON; }
 
 %%

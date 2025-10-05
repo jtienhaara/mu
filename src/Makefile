@@ -44,7 +44,11 @@ CFLAGS = -Werror -fPIC -O2
 LD_LIBRARY = gcc
 LD_LIBRARY_FLAGS = -shared
 LD_PROGRAM = gcc
-LD_PROGRAM_FLAGS = -Wl,--no-as-needed -lpcre2-8 -lutf8proc -lutf8lex
+LD_PROGRAM_FLAGS = -Wl,--no-as-needed \
+	-lpcre2-8 \
+	-ltree-sitter \
+	-lutf8proc \
+	-lutf8lex
 
 #
 # Statically linked library, executable:
@@ -93,6 +97,7 @@ $(BUILD_DIR)/mu_lex/%.c: %.l
 	mkdir -p $(BUILD_DIR)/mu_lex
 	cp $< $(BUILD_DIR)/mu_lex/mu_lex.l
 	utf8lex $(BUILD_DIR)/mu_lex/mu_lex.l
+	echo '!!! HERE:'; cat $(BUILD_DIR)/mu_lex/mu_lex.c
 
 # Rule for $(GENERATED_OBJECT_FILES):
 $(BUILD_DIR)/libmu/%.o: $(BUILD_DIR)/mu_lex/%.c
